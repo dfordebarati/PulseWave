@@ -9,6 +9,7 @@ export default function Home() {
   const [showModal, setShowModal] = useState<boolean>(false);
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  
 
   useEffect(() => {
     const getTrendingVideos = async () => {
