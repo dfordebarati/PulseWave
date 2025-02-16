@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@shadcn/ui": "^0.0.4",
     "axios": "^1.7.9",
     "lodash.debounce": "^4.0.8",
     "next": "15.1.7",

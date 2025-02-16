@@ -1,80 +1,51 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { IoLogoTwitch } from "react-icons/io5";
-import { FaPlay } from "react-icons/fa";
+import { Skeleton } from "../components/ui/skeleton";
+import { FaEye } from "react-icons/fa";
 
-// Mock Data (Replace with actual API calls later)
-const games = [
-  {
-    id: 1,
-    name: "Fortnite",
-    description: "Free-to-play battle royale game",
-    genre: "Battle Royale",
-    releaseDate: "2017",
-    rating: 4.5,
-    likes: 4321,
-    platform: "PC, PS4, Xbox",
-    videoUrl: "https://www.youtube.com/embed/tmId_wHswRs",
-    additionalInfo: "Fortnite is a multiplayer online battle royale game developed and published by Epic Games."
-  },
-  {
-    id: 2,
-    name: "Valorant",
-    description: "Tactical shooter with unique agents",
-    genre: "Shooter",
-    releaseDate: "2020",
-    rating: 4.7,
-    likes: 2345,
-    platform: "PC",
-    videoUrl: "https://www.youtube.com/embed/xXaa0b8aEV4",
-    additionalInfo: "Valorant is a free-to-play first-person tactical hero shooter game developed and published by Riot Games."
-  },
-  {
-    id: 3,
-    name: "Minecraft",
-    description: "Build and explore endless worlds.",
-    genre: "Sandbox",
-    releaseDate: "2011",
-    rating: 4.8,
-    likes: 6789,
-    platform: "PC, Console",
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    additionalInfo: "Minecraft is a sandbox video game developed and published by Mojang Studios. The game allows players to build and explore virtual worlds made of blocks."
-  },
-];
+interface TwitchStream {
+  id: string;
+  user_name: string;
+  game_name: string;
+  viewer_count: number;
+  title: string;
+  thumbnail_url?: string;
+}
 
-const liveStreams = [
-  {
-    streamer: "Shroud",
-    game: "Apex Legends",
-    viewers: 12000,
-    link: "https://www.twitch.tv/shroud",
-  },
-  {
-    streamer: "Ninja",
-    game: "Fortnite",
-    viewers: 10000,
-    link: "https://www.twitch.tv/ninja",
-  },
-];
+const formatViewerCount = (count: number) => {
+  return count >= 1000 ? (count / 1000).toFixed(1) + "K" : count.toString();
+};
 
-const leaderboard = [
-  { rank: 1, username: "Player1", score: 9800, game: "Apex Legends" },
-  { rank: 2, username: "Player2", score: 9500, game: "Fortnite" },
-  { rank: 3, username: "Player3", score: 9200, game: "Minecraft" },
-];
+const GamesPage = () => {
+  const [streams, setStreams] = useState<TwitchStream[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedGame, setSelectedGame] = useState<TwitchStream | null>(null);
+  const [filter, setFilter] = useState("");
 
-export default function Games() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedGame, setSelectedGame] = useState<any>(null);
+  useEffect(() => {
+    const fetchStreams = async () => {
+      try {
+        const res = await fetch("/api/twitch");
+        const data = await res.json();
+        if (data.error) {
+          setError(data.error);
+        } else {
+          setStreams(data.data);
+        }
+      } catch (err) {
+        setError("Failed to fetch data from Twitch API");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-  };
+    fetchStreams();
+  }, []);
 
-  const handleGameClick = (game: any) => {
+  const handleGameClick = (game: TwitchStream) => {
     setSelectedGame(game);
   };
 
@@ -82,115 +53,323 @@ export default function Games() {
     setSelectedGame(null);
   };
 
-  return (
-    <div className="bg-black text-white min-h-screen p-6">
-      <h1 className="text-5xl text-center font-extrabold text-cyan-400 mb-10 neon-text">
-        PulseWave Gaming Hub
-      </h1>
+  const filteredStreams = streams
+    .filter((stream) =>
+      stream.game_name.toLowerCase().includes(filter.toLowerCase())
+    )
+    .sort((a, b) => b.viewer_count - a.viewer_count);
 
-      {/* Search Bar */}
-      <div className="text-center mb-8">
+  return (
+    <>
+      <div className="p-8 space-y-8 bg-gray-800">
+        <h1 className="text-4xl font-bold text-cyan-400 text-center py-8">
+          Trending Games & Live Streams
+        </h1>
+
         <input
           type="text"
-          placeholder="Search for Games..."
-          value={searchQuery}
-          onChange={handleSearch}
-          className="w-full p-4 text-lg rounded-lg bg-gray-800 text-white border-2 border-cyan-500"
+          placeholder="Search for a game..."
+          className="w-full p-3 rounded bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
         />
-      </div>
 
-      {/* Trending Games */}
-      <motion.div
-        className="mt-12"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-      >
-        <h2 className="text-4xl font-bold text-white mb-4">Trending Games</h2>
-        <div className="flex space-x-6 overflow-x-auto pb-8">
-          {games.map((game) => (
-            <div
-              key={game.id}
-              className="flex-none w-[280px] bg-gray-800 p-6 rounded-lg shadow-lg hover:scale-105 transition-all cursor-pointer"
-              onClick={() => handleGameClick(game)}
-            >
-              <iframe
-                width="100%"
-                height="180"
-                src={game.videoUrl}
-                title={game.name}
-                className="rounded-lg"
-                frameBorder="0"
-                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-              <h3 className="text-2xl text-cyan-400 mt-4">{game.name}</h3>
-              <p className="text-gray-400">{game.description}</p>
-            </div>
-          ))}
-        </div>
-      </motion.div>
+        {/* Loading Skeletons */}
+        {loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-40 bg-gray-700 rounded-lg" />
+            ))}
+          </div>
+        )}
 
-      {/* Real-Time Leaderboards */}
-      <div className="mt-12">
-        <h2 className="text-4xl font-bold text-white mb-6">Game Stats</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {leaderboard.map((entry) => (
-            <div key={entry.rank} className="bg-gray-800 p-6 rounded-lg shadow-xl hover:shadow-2xl transition-all transform hover:scale-105">
-              <h3 className="text-2xl font-bold text-cyan-400">{entry.username}</h3>
-              <p className="text-gray-400">Rank: {entry.rank} | Game: {entry.game}</p>
-              <p className="text-yellow-400">{entry.score} Points</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Live Streams */}
-      <div className="mt-12">
-        <h2 className="text-4xl font-bold text-white mb-6">Live Streams</h2>
-        <div className="flex space-x-6">
-          {liveStreams.map((stream) => (
-            <a
-              key={stream.streamer}
-              href={stream.link}
-              target="_blank"
-              className="flex-none w-[280px] bg-gray-800 p-6 rounded-lg shadow-lg hover:scale-105 transition-all"
-            >
-              <IoLogoTwitch size={40} className="text-purple-500" />
-              <h3 className="text-2xl text-cyan-400 mt-4">{stream.streamer}</h3>
-              <p className="text-gray-400">Game: {stream.game}</p>
-              <p className="text-yellow-400">Viewers: {stream.viewers}</p>
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="mt-12 flex justify-center space-x-4">
-        <a href="#" className="text-cyan-400 hover:text-cyan-500">Discord</a>
-        <a href="#" className="text-cyan-400 hover:text-cyan-500">Reddit</a>
-        <a href="#" className="text-cyan-400 hover:text-cyan-500">Twitter</a>
-      </div>
-
-      {/* Game Description Modal */}
-      {selectedGame && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
-          <div className="bg-gray-900 p-8 rounded-lg w-[80%] sm:w-[60%] lg:w-[40%]">
-            <h2 className="text-3xl text-cyan-400 mb-4">{selectedGame.name}</h2>
-            <p className="text-lg text-gray-300 mb-4">{selectedGame.additionalInfo}</p>
-            <p className="text-lg text-gray-300 mb-4">Genre: {selectedGame.genre}</p>
-            <p className="text-lg text-gray-300 mb-4">Release Date: {selectedGame.releaseDate}</p>
-            <p className="text-lg text-yellow-400 mb-4">Rating: {selectedGame.rating} / 5</p>
-            <p className="text-lg text-gray-300 mb-4">Platform: {selectedGame.platform}</p>
+        {/* Error Message */}
+        {error && (
+          <div className="text-center text-red-500">
+            {error}{" "}
             <button
-              onClick={handleCloseModal}
-              className="mt-4 px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              onClick={() => window.location.reload()}
+              className="text-blue-400 underline"
             >
-              Close
+              Retry
             </button>
           </div>
+        )}
+
+        {/* Game Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredStreams.map((stream, index) => (
+            <motion.div
+              key={stream.id}
+              className="relative bg-gray-900 p-4 rounded-lg shadow-lg hover:shadow-xl transition-all cursor-pointer"
+              whileHover={{ scale: 1.05 }}
+              onClick={() => handleGameClick(stream)}
+            >
+              {/* Thumbnail (Real-Time) */}
+              <img
+                src={
+                  stream.thumbnail_url
+                    ? stream.thumbnail_url
+                        .replace("{width}", "320")
+                        .replace("{height}", "180")
+                    : "/default-thumbnail.jpg"
+                }
+                alt={stream.game_name}
+                className="w-full h-40 object-cover rounded"
+              />
+
+              {/* TRENDING Badge (Cyberpunk Gradient) */}
+              {index < 3 && ( // Only top 3 trending streams get this badge
+                <span className="absolute top-2 right-2 bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500 text-white text-xs font-bold px-3 py-1 rounded">
+                  TRENDING
+                </span>
+              )}
+
+              {/* Title & LIVE Badge (aligned properly) */}
+              <div className="flex justify-between items-center mt-2">
+                <h3 className="text-lg text-cyan-400 font-semibold">
+                  {stream.game_name}
+                </h3>
+                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                  LIVE
+                </span>
+              </div>
+
+              {/* Optimized Description */}
+              <p className="text-sm text-gray-300 mt-1 line-clamp-2">
+                {stream.title}
+              </p>
+
+              {/* Viewers Count (Aligned Properly) */}
+              <div className="flex items-center mt-2">
+                <FaEye className="text-green-400 mr-2" />
+                <p className="text-sm text-green-400 font-semibold">
+                  {formatViewerCount(stream.viewer_count)}
+                </p>
+              </div>
+            </motion.div>
+          ))}
         </div>
-      )}
-    </div>
+
+        {/* MODAL (Game Details) */}
+        {selectedGame && (
+          <div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="bg-gray-900 p-9 rounded-lg w-[90%] sm:w-[70%] lg:w-[50%] max-h-[90vh] overflow-y-auto relative shadow-lg"
+            >
+              {/* Close Button */}
+              <button
+                onClick={handleCloseModal}
+                className="absolute top-2 right-2 text-white bg-red-600 px-3 py-1 rounded-full hover:bg-red-700 transition"
+              >
+                ✕
+              </button>
+
+              {/* Game Details */}
+              <h2 className="text-3xl text-cyan-400 font-bold mb-4">
+                {selectedGame.game_name}
+              </h2>
+
+              {/* Thumbnail in Modal */}
+              <img
+                src={
+                  selectedGame.thumbnail_url
+                    ? selectedGame.thumbnail_url
+                        .replace("{width}", "640")
+                        .replace("{height}", "360")
+                    : "/default-thumbnail.jpg"
+                }
+                alt={selectedGame.game_name}
+                className="w-full h-48 object-cover rounded"
+              />
+
+              {/* Stream Info */}
+              <p className="text-md text-gray-300 mt-4">{selectedGame.title}</p>
+              <p className="text-md text-gray-400 mt-1">
+                Streamer:{" "}
+                <span className="text-white">{selectedGame.user_name}</span>
+              </p>
+
+              {/* Viewers Count */}
+              <div className="flex items-center mt-2">
+                <FaEye className="text-green-400 mr-2" />
+                <p className="text-md text-green-400 font-semibold">
+                  {formatViewerCount(selectedGame.viewer_count)}
+                </p>
+              </div>
+
+              {/* Watch Button */}
+              <a
+                href={`https://www.twitch.tv/${selectedGame.user_name}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 block text-center px-6 py-2 bg-cyan-500 text-white font-bold rounded-lg hover:bg-cyan-600 transition"
+              >
+                Watch Live
+              </a>
+            </motion.div>
+          </div>
+        )}
+      </div>
+
+      <div className="p-8 space-y-8 bg-purple-800">
+        <h1 className="text-4xl font-bold text-cyan-400 text-center py-8">
+          Trending Games & Live Streams
+        </h1>
+
+        <input
+          type="text"
+          placeholder="Search for a game..."
+          className="w-full p-3 rounded bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
+
+        {/* Loading Skeletons */}
+        {loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-40 bg-gray-700 rounded-lg" />
+            ))}
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="text-center text-red-500">
+            {error}{" "}
+            <button
+              onClick={() => window.location.reload()}
+              className="text-blue-400 underline"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Game Cards */}
+        <div className="h-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredStreams.map((stream, index) => (
+            <motion.div
+              key={stream.id}
+              className="relative bg-gray-900 p-4 rounded-lg shadow-lg hover:shadow-xl transition-all cursor-pointer"
+              whileHover={{ scale: 1.05 }}
+              onClick={() => handleGameClick(stream)}
+            >
+              {/* Thumbnail (Real-Time) */}
+              <img
+                src={
+                  stream.thumbnail_url
+                    ? stream.thumbnail_url
+                        .replace("{width}", "320")
+                        .replace("{height}", "180")
+                    : "/default-thumbnail.jpg"
+                }
+                alt={stream.game_name}
+                className="w-full h-40 object-cover rounded"
+              />
+
+              {/* TRENDING Badge (Cyberpunk Gradient) */}
+              {index < 3 && ( // Only top 3 trending streams get this badge
+                <span className="absolute top-2 right-2 bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500 text-white text-xs font-bold px-3 py-1 rounded">
+                  TRENDING
+                </span>
+              )}
+
+              {/* Title & LIVE Badge (aligned properly) */}
+              <div className="flex justify-between items-center mt-2">
+                <h3 className="text-lg text-cyan-400 font-semibold">
+                  {stream.game_name}
+                </h3>
+                <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                  LIVE
+                </span>
+              </div>
+
+              {/* Optimized Description */}
+              <p className="text-sm text-gray-300 mt-1 line-clamp-2">
+                {stream.title}
+              </p>
+
+              {/* Viewers Count (Aligned Properly) */}
+              <div className="flex items-center mt-2">
+                <FaEye className="text-green-400 mr-2" />
+                <p className="text-sm text-green-400 font-semibold">
+                  {formatViewerCount(stream.viewer_count)}
+                </p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* MODAL (Game Details) */}
+        {selectedGame && (
+          <div className="fixed inset-0 bg-black bg-opacity-80 flex justify-center items-center z-50 transition-opacity duration-500 ease-in-out">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              className="bg-gray-900 p-9 rounded-lg w-[90%] sm:w-[70%] lg:w-[50%] max-h-[90vh] overflow-y-auto relative shadow-lg"
+            >
+              {/* Close Button */}
+              <button
+                onClick={handleCloseModal}
+                className="absolute top-2 right-2 text-white bg-red-600 px-3 py-1 rounded-full hover:bg-red-700 transition"
+              >
+                ✕
+              </button>
+
+              {/* Game Details */}
+              <h2 className="text-3xl text-cyan-400 font-bold mb-4">
+                {selectedGame.game_name}
+              </h2>
+
+              {/* Thumbnail in Modal */}
+              <img
+                src={
+                  selectedGame.thumbnail_url
+                    ? selectedGame.thumbnail_url
+                        .replace("{width}", "640")
+                        .replace("{height}", "360")
+                    : "/default-thumbnail.jpg"
+                }
+                alt={selectedGame.game_name}
+                className="w-full h-48 object-cover rounded"
+              />
+
+              {/* Stream Info */}
+              <p className="text-md text-gray-300 mt-4">{selectedGame.title}</p>
+              <p className="text-md text-gray-400 mt-1">
+                Streamer:{" "}
+                <span className="text-white">{selectedGame.user_name}</span>
+              </p>
+
+              {/* Viewers Count */}
+              <div className="flex items-center mt-2">
+                <FaEye className="text-green-400 mr-2" />
+                <p className="text-md text-green-400 font-semibold">
+                  {formatViewerCount(selectedGame.viewer_count)}
+                </p>
+              </div>
+
+              {/* Watch Button */}
+              <a
+                href={`https://www.twitch.tv/${selectedGame.user_name}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-6 block text-center px-6 py-2 bg-cyan-500 text-white font-bold rounded-lg hover:bg-cyan-600 transition"
+              >
+                Watch Live
+              </a>
+            </motion.div>
+          </div>
+        )}
+      </div>
+    </>
   );
-}
+};
+
+export default GamesPage;
