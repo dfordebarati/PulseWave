@@ -6,4 +6,6 @@ const nextConfig: NextConfig = {
   },
 };
 
+console.log("Loading env:", process.env.NODE_ENV);
+
 export default nextConfig;
