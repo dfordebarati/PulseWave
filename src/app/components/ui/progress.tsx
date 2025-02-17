@@ -9,16 +9,20 @@ export const Progress = ({
   className?: string;
   max?: number;
 }) => {
+  // Ensure value is within the valid range (0 - max)
+  const normalizedValue = Math.min(Math.max(value, 0), max);
+  const progressPercentage = (normalizedValue / max) * 100;
+
   return (
     <div className={`relative ${className}`}>
-      <div className="flex items-center justify-between mb-1">
-        <div className="text-xs font-semibold inline-block py-1 uppercase">{value}%</div>
-      </div>
-      <div className="w-full h-2 bg-gray-300 rounded-full">
+      <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
         <div
-          className="bg-pink-500 h-2 rounded-full"
-          style={{ width: `${(value / max) * 100}%` }}
+          className="bg-pink-500 h-2 rounded-full transition-all duration-500"
+          style={{ width: `${progressPercentage}%` }}
         />
+      </div>
+      <div className="text-xs font-semibold text-white text-right mt-1">
+        {progressPercentage.toFixed(0)}%
       </div>
     </div>
   );

@@ -3,7 +3,24 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "../components/ui/skeleton";
-import { FaEye, FaTimes } from "react-icons/fa";
+import {
+  FaEye,
+  FaTimes,
+  FaTrophy,
+  FaChartLine,
+  FaClock,
+  FaMedal,
+} from "react-icons/fa";
+import { Trophy, Flame, Calendar, Medal } from "lucide-react";
+import { Button } from "../components/ui/button";
+
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card"; // One level up from the current folder
+import { Progress } from "../components/ui/progress"; // Same directory structure
 
 interface TwitchStream {
   id: string;
@@ -24,6 +41,41 @@ const GamesPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedGame, setSelectedGame] = useState<TwitchStream | null>(null);
   const [filter, setFilter] = useState("");
+  const [activeTab, setActiveTab] = useState("global");
+
+  const leaderboardData = [
+    {
+      name: "CyberNinja",
+      points: 12450,
+      icon: <Trophy className="text-yellow-400" />,
+    },
+    {
+      name: "PixelWarrior",
+      points: 11280,
+      icon: <Medal className="text-yellow-300" />,
+    },
+    {
+      name: "NeonHunter",
+      points: 10890,
+      icon: <Medal className="text-yellow-300" />,
+    },
+    { name: "ByteMaster", points: 9670 },
+    { name: "DataPunk", points: 8940 },
+  ];
+
+  const challenges = [
+    { title: "Win 10 Ranked Matches", progress: 50, points: 1000 },
+    { title: "Complete Story Mode", progress: 75, points: 2500 },
+    { title: "Achieve 100 Headshots", progress: 60, points: 1500 },
+    { title: "Reach Level 50", progress: 30, points: 3000 },
+  ];
+
+  const events = [
+    { name: "Cyberpunk Tournament", date: "Dec 15", prize: "$100,000" },
+    { name: "League Championships", date: "Dec 18", prize: "$250,000" },
+    { name: "Steam Winter Games", date: "Dec 20", prize: "$150,000" },
+    { name: "Nintendo Cup", date: "Dec 25", prize: "$75,000" },
+  ];
 
   useEffect(() => {
     const cachedData = sessionStorage.getItem("twitchStreams");
@@ -124,8 +176,8 @@ const GamesPage = () => {
                 className="w-full h-40 object-cover rounded"
               />
               <span className="absolute top-2 right-2 bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500 text-white text-xs font-bold px-3 py-1 rounded">
-                  TRENDING
-                </span>
+                TRENDING
+              </span>
 
               <div className="flex justify-between items-center mt-2">
                 <h3 className="text-lg text-cyan-400 font-semibold">
@@ -215,6 +267,111 @@ const GamesPage = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* 🏆 SECTION 2: Leaderboards & Challenges */}
+      <div className="p-6 bg-[#0a021a] text-white min-h-screen font-mono">
+        <h1 className="text-3xl font-bold text-pink-500 mb-6">
+          Leaderboards & Challenges
+        </h1>
+        <div className="flex space-x-6">
+          {/* Leaderboard */}
+          <Card className="w-1/3 border border-pink-500 bg-[#15072a]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <Trophy className="text-yellow-400" /> Top Players
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {leaderboardData.map((player, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between py-2 items-center border-b border-gray-700"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-pink-400 font-semibold">
+                      #{index + 1}
+                    </span>
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-r from-purple-500 to-blue-500"></div>
+                    <span className="text-lg">{player.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {player.icon}
+                    <span className="text-green-400 font-semibold">
+                      {player.points} pts
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Active Challenges */}
+          <Card className="w-1/3 border border-pink-500 bg-[#15072a] p-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold text-white">
+                <Flame className="text-pink-400" /> Active Challenges
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {challenges.length > 0 ? (
+                challenges.map((challenge, index) => (
+                  <div key={index} className="mb-4 p-3 bg-[#1f0d3a] rounded-lg">
+                    <div className="flex justify-between items-center text-lg text-white">
+                      <span>{challenge.title}</span>
+                      <span className="text-green-400 font-semibold">
+                        {challenge.points} pts
+                      </span>
+                    </div>
+                    <Progress value={challenge.progress} className="mt-2" />
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-400 text-center">
+                  No active challenges
+                </p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Events */}
+          <Card className="w-1/3 border border-pink-500 bg-[#15072a]">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg font-semibold">
+                <Calendar className="text-blue-400" /> Upcoming Events
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {events.map((event, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between py-3 border-b border-gray-700 items-center"
+                >
+                  <div>
+                    <span className="font-semibold text-lg">{event.name}</span>
+                    <div className="text-gray-400 text-sm">{event.date}</div>
+                  </div>
+                  <span className="text-green-400 font-semibold">
+                    {event.prize}
+                  </span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Toggle Buttons */}
+        <div className="flex justify-end space-x-3 mt-6">
+          <Button className="bg-pink-500 text-white px-6 py-2 rounded-lg border border-pink-400">
+            Global
+          </Button>
+          <Button className="bg-gray-700 text-white px-6 py-2 rounded-lg">
+            Friends
+          </Button>
+          <Button className="bg-gray-700 text-white px-6 py-2 rounded-lg">
+            Weekly
+          </Button>
+        </div>
+      </div>
     </>
   );
 };
